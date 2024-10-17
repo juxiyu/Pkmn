@@ -1,12 +1,19 @@
 package ru.mirea.pkmn.batuevayn;
-
+import ru.mirea.pkmn.Card;
 import java.io.*;
 
 public class CardExport {
-    public CardExport(Card card) throws IOException {
-        File myFile = new File("src/main/resources/" + card.getName() + ".crd");
-        FileOutputStream fileOutputStream = new FileOutputStream(myFile);
-        ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-        objectOutputStream.writeObject(card);
+    private final Card card;
+
+    public CardExport(Card card) {
+        this.card = card;
+    }
+
+    public void serializeToBytes() throws IOException {
+        File output = new File("src/main/resources/" + this.card.getName() + ".crd");
+        try (FileOutputStream fileOutputStream = new FileOutputStream(output);
+             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)) {
+            objectOutputStream.writeObject(this.card);
+        }
     }
 }

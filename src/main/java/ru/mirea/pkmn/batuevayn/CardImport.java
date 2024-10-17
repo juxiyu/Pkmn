@@ -1,125 +1,87 @@
 package ru.mirea.pkmn.batuevayn;
-
+import ru.mirea.pkmn.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class CardImport {
-    private Card card;
-    public CardImport(String filename) {
-        try {
-            String[] lines = readLines(filename);
-            card = new Card();
-            card = processLines(lines);
-        }
-        catch(IOException e) {
-            System.out.println(e.getMessage());
-        }
-    }
+    public Card importCard(String filename) throws IOException {
 
-    public Card getCard() {
+        FileInputStream inputStream = new FileInputStream("src/main/resources/" + filename);
+        Card card = new Card();
+        try (InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+             BufferedReader br = new BufferedReader(inputStreamReader))
+        {
+            String line;
+
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(" ");
+                if(Objects.equals(parts[0], "1.")) {
+                    card.setPokemonStage(PokemonStage.valueOf(parts[1]));
+                } else if(Objects.equals(parts[0], "2.")) {
+                    card.setName(parts[1]);
+                } else if(Objects.equals(parts[0], "3.")) {
+                    card.setHp(Integer.parseInt(parts[1]));
+                } else if(Objects.equals(parts[0], "4.")) {
+                    card.setPokemonType(EnergyType.valueOf(parts[1]));
+                } else if(Objects.equals(parts[0], "5.")) {
+                    if (parts.length == 2 && !parts[1].isEmpty() && !parts[1].equals("-")) {
+                        Card evolvesCard = importCard(parts[1]);
+                        card.setEvolvesFrom(evolvesCard);
+                    } else {
+                        card.setEvolvesFrom(null);
+                    }
+                } else if(Objects.equals(parts[0], "6.")) {
+                    List<AttackSkill> attackSkills = new ArrayList<>();
+                    if (parts[1].contains(",")) {
+                        String[] skills = parts[1].split(",");
+                        for (String skill : skills) {
+                            String[] skillParts = skill.split("/");
+                            attackSkills.add(new AttackSkill(skillParts[1], skillParts[0], Integer.parseInt(skillParts[2])));
+                        }
+                        card.setSkills(attackSkills);
+                    } else if(parts[1].equals("-")) {
+                        card.setSkills(null);
+                    } else {
+                        String[] skillParts = parts[1].split("/");
+                        attackSkills.add(new AttackSkill(skillParts[1], skillParts[0], Integer.parseInt(skillParts[2])));
+                        card.setSkills(attackSkills);
+                    }
+                } else if(Objects.equals(parts[0], "7.")){
+                    card.setWeaknessType(parts.length == 2 && !parts[1].isEmpty() ? EnergyType.valueOf(parts[1]) : null);
+                } else if(Objects.equals(parts[0], "8.")) {
+                    card.setResistanceType(parts.length == 2 && !parts[1].isEmpty() && !parts[1].equals("-") ? EnergyType.valueOf(parts[1]) : null);
+                } else if(Objects.equals(parts[0], "9.")) {
+                    card.setRetreatCost(parts.length == 2 && !parts[1].isEmpty() && !parts[1].equals("-") ? parts[1] : null);
+                } else if(Objects.equals(parts[0], "10.")) {
+                    card.setGameSet(parts.length == 2 &&
+                            !parts[1].isEmpty() &&
+                            !parts[1].equals("-")
+                            ? null
+                            : String.join(" ", Arrays.copyOfRange(parts, 1, parts.length)));
+                } else if(Objects.equals(parts[0], "11.")) {
+                    card.setRegulationMark(
+                            parts.length == 2 && !parts[1].isEmpty()
+                                    ? parts[1].charAt(0) : null);
+                } else if(Objects.equals(parts[0], "12.")) {
+                    if (parts.length == 2 && !parts[1].equals("-")) {
+                        String[] ownerInfo = parts[1].split("/");
+
+                        Student owner = new Student(ownerInfo[1], ownerInfo[0], ownerInfo[2], ownerInfo[3]);
+                        card.setPokemonOwner(owner);
+                    } else {
+                        card.setPokemonOwner(null);
+                    }
+                }
+            }
+        }
         return card;
     }
 
-    private void setCard(Card card) {
-        this.card = card;
-    }
-
-    public Card exportCrd(String filename) throws IOException, ClassNotFoundException {
-        FileInputStream fileInputStream = new FileInputStream(filename);
+    public Card deserializeCard(String name) throws IOException, ClassNotFoundException {
+        String path = "src/main/resources/" + name + ".crd";
+        FileInputStream fileInputStream = new FileInputStream(path);
         ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-        Card card = (Card) objectInputStream.readObject();
-        return card;
-    }
-
-    private String[] readLines(String filename) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(filename)));
-        String[] lines = new String[15];
-        String line;
-        int i = 0;
-        while ((line = reader.readLine()) != null) {
-            lines[i] = line;
-            i++;
-        }
-        return lines;
-    }
-
-    private Card processLines(String[] lines) throws IOException {
-        card.setPokemonStage(stage(lines[0]));
-        card.setName(lines[1]);
-        card.setHp(Integer.parseInt(lines[2]));
-        card.setPokemonType(type(lines[3]));
-
-        if (lines[4].equals("-")) {
-            card.setEvolvesFrom(null);
-        }
-        else {
-            CardImport cardEvolves = new CardImport(lines[4]);
-            card.setEvolvesFrom(cardEvolves.getCard());
-        }
-
-        AttackSkill attackSkill;
-        ArrayList<AttackSkill> skill = new ArrayList<>();
-        String[] skills = lines[5].split("/");
-        for(int i = 0; i < skills.length; i += 3){
-            attackSkill = new AttackSkill();
-            attackSkill.setCost(skills[i]);
-            attackSkill.setName(skills[i+1]);
-            attackSkill.setDamage(Integer.parseInt(skills[i+2]));
-            skill.add(i/3, attackSkill);
-        }
-        card.setSkills(skill);
-
-        card.setWeaknessType(type(lines[6]));
-        card.setResistanceType(type(lines[7]));
-        card.setRetreatCost(lines[8]);
-        card.setGameSet(lines[9]);
-        card.setRegulationMark(lines[10].charAt(0));
-
-        String[] ownerLine= lines[11].split("/");
-        Student owner = new Student(ownerLine[1], ownerLine[0], ownerLine[2], ownerLine[3]);
-        card.setPokemonOwner(owner);
-
-        return card;
-    }
-
-    private PokemonStage stage(String s) {
-        if (s.equals("BASIC"))
-            return PokemonStage.BASIC;
-        else if (s.equals("STAGE1"))
-            return PokemonStage.STAGE1;
-        else if (s.equals("STAGE2"))
-            return PokemonStage.STAGE2;
-        else if (s.equals("VSTAR"))
-            return PokemonStage.VSTAR;
-        else if (s.equals("VMAX"))
-            return PokemonStage.VMAX;
-        return null;
-    }
-
-    private EnergyType type(String s) {
-        if (s.equals("FIRE"))
-            return EnergyType.FIRE;
-        else if (s.equals("GRASS"))
-            return EnergyType.GRASS;
-        else if (s.equals("WATER"))
-            return EnergyType.WATER;
-        else if (s.equals("LIGHTNING"))
-            return EnergyType.LIGHTNING;
-        else if (s.equals("PSYCHIC"))
-            return EnergyType.PSYCHIC;
-        else if (s.equals("FIGHTING"))
-            return EnergyType.FIGHTING;
-        else if (s.equals("DARKNESS"))
-            return EnergyType.DARKNESS;
-        else if (s.equals("METAL"))
-            return EnergyType.METAL;
-        else if (s.equals("FAIRY"))
-            return EnergyType.FAIRY;
-        else if (s.equals("DRAGON"))
-            return EnergyType.DRAGON;
-        else if (s.equals("COLORLESS"))
-            return EnergyType.COLORLESS;
-        return null;
+        return (Card) objectInputStream.readObject();
     }
 }

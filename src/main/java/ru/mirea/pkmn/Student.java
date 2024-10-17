@@ -1,4 +1,4 @@
-package ru.mirea.pkmn.batuevayn;
+package ru.mirea.pkmn;
 
 import java.io.Serial;
 import java.io.Serializable;

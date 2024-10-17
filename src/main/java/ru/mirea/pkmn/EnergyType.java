@@ -1,4 +1,4 @@
-package ru.mirea.pkmn.batuevayn;
+package ru.mirea.pkmn;
 
 public enum EnergyType {
     FIRE,

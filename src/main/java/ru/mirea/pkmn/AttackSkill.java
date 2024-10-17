@@ -1,4 +1,4 @@
-package ru.mirea.pkmn.batuevayn;
+package ru.mirea.pkmn;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -7,10 +7,8 @@ public class AttackSkill implements Serializable {
     @Serial
     public static final long serialVersionUID = 1L;
 
-    private String name;
-    private String description;
-    private String cost;
-    private int damage;
+    public AttackSkill() {
+    }
 
     public AttackSkill(String name, String description, String cost, int damage) {
         this.name = name;
@@ -19,39 +17,47 @@ public class AttackSkill implements Serializable {
         this.damage = damage;
     }
 
-    public AttackSkill() {
+    public AttackSkill(String name, String cost, int damage) {
+        this.name = name;
+        this.cost = cost;
+        this.damage = damage;
+        this.description = "";
     }
+
+    private String name;
 
     public String getName() {
         return name;
     }
-
-    public void setName(String name) {
-        this.name = name;
+    public void setName(String value) {
+        name = value;
     }
+
+    private String description;
 
     public String getDescription() {
         return description;
     }
-
-    public void setDescription(String description) {
-        this.description = description;
+    public void setDescription(String value) {
+        description = value;
     }
+
+    private String cost;
 
     public String getCost() {
         return cost;
     }
-
-    public void setCost(String cost) {
-        this.cost = cost;
+    public void setCost(String value) {
+        cost = value;
     }
+
+    private int damage;
 
     public int getDamage() {
         return damage;
     }
-
-    public void setDamage(int damage) {
-        this.damage = damage;
+    public void setDamage(int value) {
+        damage = value;
     }
 
     @Override
