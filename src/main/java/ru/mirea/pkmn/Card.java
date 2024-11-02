@@ -109,6 +109,10 @@ public class Card implements Serializable {
         pokemonOwner = value;
     }
 
+    private String number;
+    public String getNumber() { return number; }
+    public void setNumber(String value) { number = value; }
+
     @Override
     public String toString() {
         return "Card " +
@@ -123,7 +127,8 @@ public class Card implements Serializable {
                 " retreatCost='" + retreatCost + '\'' + '\n' +
                 " gameSet='" + gameSet + '\'' + '\n' +
                 " regulationMark=" + regulationMark + '\n' +
-                " pokemonOwner=" + pokemonOwner +
+                " pokemonOwner=" + pokemonOwner + '\n' +
+                " number='" + number + '\'' + '\n' +
                 '}';
     }
 }
